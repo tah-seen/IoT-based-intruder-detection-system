@@ -42,6 +42,7 @@ def send_message_from_twilio(Body):
         print('Error sending SMS:', response.text)
 
 def check_device_status():
+    '''Returns Ture if Device is online'''
     my_bolt = Bolt(api_key, device_id)
     device_response = my_bolt.isOnline()
     device_data = json.loads(device_response)
@@ -49,47 +50,49 @@ def check_device_status():
 
 def check_led_status():
     '''Returns Ture if LED is on'''
-    led_response = my_bolt.digitalRead('0') # {"success": "1", "value": "1"}
+    led_response = my_bolt.digitalRead('0')
     led_data = json.loads(led_response)
+    if led_data['success'] == 0:
+        print(led_data['value'])
+        sys.exit()
     return led_data['value'] == '1'
 
-def ldr_reading():
-    '''Analog reading at A0'''
-    ldr_response = my_bolt.analogRead('A0')
-    ldr_data = json.loads(ldr_response)
-    return int(ldr_data['value'])
-
 def detect_sudden_change():
-    '''Detect sudden heavy drop in voltage across Ldr'''
+    '''Detect sudden heavy drop in voltage across LRD'''
     try: 
-        ldr_readings = list(ldr_reading())
-        time.sleep(10)
-        ldr_readings.append(ldr_reading())
-
-        # if change in recent two ldr readings is less than 10%  
-        if abs(ldr_readings[1]-ldr_readings[0]) < .1*ldr_readings[0]:
+        ldr_response = my_bolt.analogRead('A0')
+        ldr_data = json.loads(ldr_response)
+        sensor_value = int(ldr_data['value']) 
+        if abs(sensor_value) < 1024:
+            print("Analog Reading detected below 1024")
             return True
-        else:
-            ldr_reading
+        time.sleep(15)
     except Exception as e:
         print ("Error occured, below are the details:")
         print (e)
-    
+
 def start_buzzer():
     '''Turn On Buzzer for 20 seconds'''
-    my_bolt.digitalWrite('1', 'HIGH')
-    time.sleep(20)
-    my_bolt.digitalWrite('1', 'LOW')
+    try:
+        my_bolt.digitalWrite('1', 'HIGH')
+        time.sleep(20)
+        my_bolt.digitalWrite('1', 'LOW')
+        print("Buzzer stoped after 20 seconds")
+    except KeyboardInterrupt:
+        my_bolt.digitalWrite('0', 'LOW')
+        my_bolt.digitalWrite('1', 'LOW')
+        print("KeyboardInterrupt: Stopping the script.")
 
 
 
 try:
     while True:
         if check_led_status():
-            # LED is on. Starting Python code execution.
+            print("LED is on. Starting Python code execution.")
+            
             # If sudden change in light intensity detected, alert the house owner
             if detect_sudden_change():
-                send_message_from_twilio("intruder may be in your home")
+                send_message_from_twilio("Possible intruders detected at your home. Take immediate action to safeguard your belongings.")
                 start_buzzer()
                 sys.exit()
 
@@ -104,5 +107,7 @@ try:
         # Wait for a few seconds before checking again
         time.sleep(30)
 
-except KeyboadrInterrupt:
-    print("KeyboadrInterrupt: Stopping the script.")
+except KeyboardInterrupt:
+    my_bolt.digitalWrite('0', 'LOW')
+    my_bolt.digitalWrite('1', 'LOW')
+    print("KeyboardInterrupt: Stopping the script.")

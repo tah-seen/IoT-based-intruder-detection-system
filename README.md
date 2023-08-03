@@ -9,7 +9,7 @@
 
 ## Introduction
 
-The IoT-Based Intruder Detection System is a smart home security solution that leverages the power of Internet of Things (IoT) technology to protect your home from potential intruders. The system uses a combination of the Bolt Wi-Fi module, Light-Dependent Resistor (LDR) sensor, Light-Emitting Diode and a buzzer to detect sudden changes in light intensity and trigger an alert mechanism in real-time.
+The IoT-Based Intruder Detection System is a smart home security solution that leverages the power of Internet of Things (IoT) technology to protect your home from potential intruders. The system uses a combination of the Bolt Wi-Fi module, Light-Dependent Resistor (LDR) sensor, Light-Emitting Diode and a buzzer to detect sudden changes in light intensity and trigger an alert mechanism in real-time. 
 
 ## Features
 
